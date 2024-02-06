@@ -13,6 +13,7 @@
 * MAPIR group: https://mapir.isa.uma.es
 *
 * Modifications: Jeremie Deray & (see contributons on github)
+* Modifications: Marc Stelter (see github: https://github.com/ubica-robotics/rf2o_laser_odometry for details)
 ******************************************************************************************** */
 
 #ifndef CLaserOdometry2D_H
@@ -70,7 +71,7 @@ using MatrixS31 = Eigen::Matrix<Scalar, 3, 1>;
 using IncrementCov = Eigen::Matrix<Scalar, 3, 3>;
 
 
-class CLaserOdometry2D: public rclcpp::Node
+class CLaserOdometry2D
 {
 public:
 

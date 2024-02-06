@@ -13,6 +13,7 @@
 * MAPIR group: https://mapir.isa.uma.es
 *
 * Modifications: Jeremie Deray & (see contributons on github)
+* Modifications: Marc Stelter (see github: https://github.com/ubica-robotics/rf2o_laser_odometry for details)
 ******************************************************************************************** */
 
 #include "rf2o_laser_odometry/CLaserOdometry2D.hpp"
@@ -24,7 +25,6 @@ namespace rf2o {
  * Constructor that inherits from Node
 */
 CLaserOdometry2D::CLaserOdometry2D() :
-  Node("CLaserOdometry2D"),
   verbose(false),
   module_initialized(false),
   first_laser_scan(true),
@@ -65,7 +65,6 @@ void CLaserOdometry2D::init(const sensor_msgs::msg::LaserScan& scan,
                             const geometry_msgs::msg::Pose& initial_robot_pose)
 {
   // Obtain laser parametes
-  RCLCPP_INFO(get_logger(), "Got first Laser Scan .... Configuring node");
   width = scan.ranges.size();         // Num of samples (size) of the scan laser
   cols = width;						            // Max resolution. Should be similar to the width parameter
   fovh = std::abs(scan.angle_max - scan.angle_min);  // Horizontal Laser's FOV
@@ -206,9 +205,6 @@ bool CLaserOdometry2D::odometryCalculation(const sensor_msgs::msg::LaserScan& sc
   // copy @param scan to internal variable (we already did it for the previous scan)
   range_wf = Eigen::Map<const Eigen::MatrixXf>(scan.ranges.data(), width, 1);
 
-  // Keep record of times
-  auto start = get_clock()->now();
-
   // Create pyramid from current scan
   createImagePyramid();
 
@@ -270,11 +266,6 @@ bool CLaserOdometry2D::odometryCalculation(const sensor_msgs::msg::LaserScan& sc
     // 8. Filter solution
     if (!filterLevelSolution()) return false;
   } // end pyramid lvls
-
-  // Get computation time 
-  auto m_runtime = get_clock()->now() - start;
-  RCLCPP_INFO(get_logger(), "execution time (ms): %f",
-                m_runtime.seconds()*double(1000));
 
   // Update poses with the new odom
   PoseUpdate();
@@ -839,7 +830,7 @@ bool CLaserOdometry2D::filterLevelSolution()
   Eigen::SelfAdjointEigenSolver<Eigen::MatrixXf> eigensolver(cov_odo);
   if (eigensolver.info() != Eigen::Success)
   {
-    RCLCPP_WARN(get_logger(), "WARNING: Eigensolver couldn't find a solution. Pose is not updated");
+    // RCLCPP_WARN(get_logger(), "WARNING: Eigensolver couldn't find a solution. Pose is not updated");
     return false;
   }
 
@@ -966,18 +957,18 @@ void CLaserOdometry2D::PoseUpdate()
   kai_loc_old_(1) = -kai_abs_(0)*std::sin(phi) + kai_abs_(1)*std::cos(phi);
   kai_loc_old_(2) =  kai_abs_(2);
 
-  RCLCPP_INFO(get_logger(), "Laser odom [x,y,yaw]=[%f %f %f]",
-                laser_pose_.translation()(0),
-                laser_pose_.translation()(1),
-                rf2o::getYaw(laser_pose_.rotation()));
+  // RCLCPP_DEBUG(get_logger(), "Laser odom [x,y,yaw]=[%f %f %f]",
+  //               laser_pose_.translation()(0),
+  //               laser_pose_.translation()(1),
+  //               rf2o::getYaw(laser_pose_.rotation()));
 
   // Compose Transformations (robot odom)
   robot_pose_ = laser_pose_ * laser_pose_on_robot_inv_;
 
-  RCLCPP_INFO(get_logger(), "Robot-base odom [x,y,yaw]=[%f %f %f]",
-                robot_pose_.translation()(0),
-                robot_pose_.translation()(1),
-                rf2o::getYaw(robot_pose_.rotation()));
+  // RCLCPP_DEBUG(get_logger(), "Robot-base odom [x,y,yaw]=[%f %f %f]",
+  //               robot_pose_.translation()(0),
+  //               robot_pose_.translation()(1),
+  //               rf2o::getYaw(robot_pose_.rotation()));
 
   // Estimate linear/angular speeds (mandatory for base_local_planner)
   // last_scan -> the last scan received

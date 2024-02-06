@@ -6,7 +6,7 @@
 #include <tf2_ros/transform_listener.h>
 #include <tf2_ros/buffer.h>
 #include <tf2/impl/utils.h>
-#include <tf2_geometry_msgs/tf2_geometry_msgs.hpp>
+#include <tf2_geometry_msgs/tf2_geometry_msgs.h>
 #include <tf2/utils.h>
 
 namespace rf2o {
@@ -15,6 +15,7 @@ class CLaserOdometry2DNode : public rclcpp::Node
 {
 public:
   CLaserOdometry2DNode();
+protected:
   void process();
   void publish();
   bool setLaserPoseFromTf();
@@ -29,6 +30,8 @@ public:
   std::string         base_frame_id;
   std::string         odom_frame_id;
   std::string         init_pose_from_topic;
+  std::vector<double> pose_cov_list;
+  std::vector<double> twist_cov_list;
 
   sensor_msgs::msg::LaserScan                     last_scan;
   bool                                            GT_pose_initialized;
@@ -36,6 +39,9 @@ public:
   std::shared_ptr<tf2_ros::TransformListener>     tf_listener_;  
   std::unique_ptr<tf2_ros::TransformBroadcaster>  odom_broadcaster;
   nav_msgs::msg::Odometry                         initial_robot_pose;
+
+  // Timers
+  rclcpp::TimerBase::SharedPtr process_timer;
 
   // Subscriptions & Publishers
   rclcpp::Subscription<sensor_msgs::msg::LaserScan>::SharedPtr  laser_sub;

@@ -13,6 +13,7 @@
 * MAPIR group: https://mapir.isa.uma.es
 *
 * Modifications: Jeremie Deray & (see contributons on github)
+* Modifications: Marc Stelter (see github: https://github.com/ubica-robotics/rf2o_laser_odometry for details)
 ******************************************************************************************** */
 
 #include "rf2o_laser_odometry/CLaserOdometry2DNode.hpp"
@@ -39,6 +40,10 @@ CLaserOdometry2DNode::CLaserOdometry2DNode(): Node("CLaserOdometry2DNode")
   this->get_parameter("init_pose_from_topic", init_pose_from_topic);
   this->declare_parameter<double>("freq", 10.0);
   this->get_parameter("freq", freq);
+  this->declare_parameter<std::vector<double>>("pose_covariance_diagonal");
+  this->get_parameter("pose_covariance_diagonal", pose_cov_list);
+  this->declare_parameter<std::vector<double>>("twist_covariance_diagonal");
+  this->get_parameter("twist_covariance_diagonal", twist_cov_list);
 
   // Init Publishers and Subscribers
   //---------------------------------
@@ -72,6 +77,9 @@ CLaserOdometry2DNode::CLaserOdometry2DNode(): Node("CLaserOdometry2DNode")
   // Init variables
   rf2o_ref.module_initialized = false;
   rf2o_ref.first_laser_scan   = true;
+
+  // Init timers
+  process_timer = this->create_wall_timer(std::chrono::duration<double>(1.0 / freq), std::bind(&CLaserOdometry2DNode::process, this));
 }
 
 
@@ -218,11 +226,26 @@ void CLaserOdometry2DNode::publish()
   odom.pose.pose.position.y = rf2o_ref.robot_pose_.translation()(1);
   odom.pose.pose.position.z = 0.0;
   odom.pose.pose.orientation = quaternion;
+  odom.pose.covariance = {
+    pose_cov_list[0], 0., 0., 0., 0., 0.,
+    0., pose_cov_list[1], 0., 0., 0., 0.,
+    0., 0., pose_cov_list[2], 0., 0., 0.,
+    0., 0., 0., pose_cov_list[3], 0., 0.,
+    0., 0., 0., 0., pose_cov_list[4], 0.,
+    0., 0., 0., 0., 0., pose_cov_list[5] };
+
   //set the velocity
   odom.child_frame_id = base_frame_id;
   odom.twist.twist.linear.x = rf2o_ref.lin_speed;    //linear speed
   odom.twist.twist.linear.y = 0.0;
   odom.twist.twist.angular.z = rf2o_ref.ang_speed;   //angular speed
+  odom.twist.covariance = {
+    twist_cov_list[0], 0., 0., 0., 0., 0.,
+    0., twist_cov_list[1], 0., 0., 0., 0.,
+    0., 0., twist_cov_list[2], 0., 0., 0.,
+    0., 0., 0., twist_cov_list[3], 0., 0.,
+    0., 0., 0., 0., twist_cov_list[4], 0.,
+    0., 0., 0., 0., 0., twist_cov_list[5] };
   //publish the message
   odom_pub->publish(odom);
 
@@ -254,15 +277,8 @@ int main(int argc, char** argv)
   rclcpp::init(argc, argv);
   auto myLaserOdomNode = std::make_shared<rf2o::CLaserOdometry2DNode>();
 
-  // set desired loop rate
-  rclcpp::Rate rate(myLaserOdomNode->freq);
-
-  // Loop
-  while (rclcpp::ok()){ 
-      rclcpp::spin_some(myLaserOdomNode);
-      myLaserOdomNode->process();
-      rate.sleep();
-  }
+  // spin and run node
+  rclcpp::spin(myLaserOdomNode);
 
   return 0;
 }
