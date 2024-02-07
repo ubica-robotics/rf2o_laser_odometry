@@ -16,8 +16,7 @@
 * Modifications: Marc Stelter (see github: https://github.com/ubica-robotics/rf2o_laser_odometry for details)
 ******************************************************************************************** */
 
-#ifndef CLaserOdometry2D_H
-#define CLaserOdometry2D_H
+#pragma once
 
 // std header
 #include <iostream>
@@ -173,5 +172,3 @@ public:
 };
 
 } /* namespace rf2o */
-
-#endif // CLaserOdometry2D_H

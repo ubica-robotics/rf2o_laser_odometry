@@ -18,7 +18,7 @@
 
 #include "rf2o_laser_odometry/CLaserOdometry2DNode.hpp"
 
-using namespace rf2o;
+namespace rf2o {
 
 CLaserOdometry2DNode::CLaserOdometry2DNode(): Node("CLaserOdometry2DNode")
 {

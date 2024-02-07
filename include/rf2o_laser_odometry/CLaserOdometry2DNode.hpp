@@ -1,3 +1,5 @@
+#pragma once
+
 #include "rf2o_laser_odometry/CLaserOdometry2D.hpp"
 
 #include <tf2/convert.h>
@@ -53,3 +55,4 @@ protected:
   void initPoseCallBack(const nav_msgs::msg::Odometry::SharedPtr new_initPose);
 };
 
+} /* namespace rf2o */
