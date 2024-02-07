@@ -40,7 +40,7 @@ include_directories(
 
 include_directories(  
   ${Boost_INCLUDE_DIRS}
-  ##${EIGEN3_INCLUDE_DIRS}
+  ${EIGEN3_INCLUDE_DIRS}
 )
 
 set(DEPENDENCIES
@@ -55,7 +55,6 @@ set(DEPENDENCIES
   "eigen3_cmake_module"
 )
 
-##target_include_directories(${PROJECT_NAME} PUBLIC ${Eigen3_INCLUDE_DIRS})
 ament_target_dependencies(${EXECUTABLE_NAME} ${DEPENDENCIES})
 
 ## Declare a cpp library
